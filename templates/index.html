@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wardrobe Dashboard</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="dashboard-container" id="main-bg" data-weather="sunny">
+        
+        <div class="scenery-sky">
+            <div class="weather-layer layer-sun"></div>
+            <div class="weather-layer layer-clouds"></div>
+            <div class="weather-layer layer-darkClouds"></div>
+            <div class="weather-layer layer-rain"></div>
+            <div class="weather-layer layer-snow"></div>
+        </div>
+        <div class="scenery-ground">
+            <img src="../static/icons/nature/pond.png" class="pond" alt="Pond">
+            <img src="../static/icons/nature/tree.png" class="tree tree-1" alt="Tree">
+            <img src="../static/icons/nature/tree.png" class="tree tree-2" alt="Tree">
+        </div>
+
+        <div class="info-box">
+            <div class="weather-section">
+                <image src="" class="material-icons-round weather-icon animate-pulse" id="weather-icon">
+                <span class="temperature" id="temperature">15°C</span>
+            </div>
+            <div class="time-section">
+                <div class="time" id="clock">14:30</div>
+                <div class="date" id="date">Tue, Apr 14</div>
+            </div>
+        </div>
+
+        <div class="mascot-container">
+            <img src="../static/icons/teddy-bear.png" class="mascot-base" alt="Mascot Bear">
+            
+            <img src="" class="clothing-zone zone-head" id="zone-head" alt="head">
+            <img src="" class="clothing-zone zone-torso" id="zone-torso" alt="chest">
+            <div class="clothing-zone zone-hands" id="zone-hands">
+                <img src="" class="gloves" id="leftGlove">
+                <img src="" class="gloves">
+            </div>
+            <img src="" class="clothing-zone zone-legs" id="zone-legs" alt="legs">
+            <div class="clothing-zone zone-feet" id="zone-feet">
+                <img src="" class="shoes" alt="feet1">
+                <img src="" class="shoes" alt="feet2">
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../static/script.js"></script>
+</body>
+</html>

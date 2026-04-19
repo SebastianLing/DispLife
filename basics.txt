@@ -1,0 +1,13 @@
+The Hardware: Raspberry Pi Zero 2 W + 7" or 10" IPS LCD (non-touch) + PIR Motion Sensor.
+
+The Power & Mount: Wall-plugged, mounted securely via a French Cleat, housed in a durable 3D-printed/ABS case with an acrylic screen protector.
+
+The Brains (Backend): Python running a Flask server, handling the motion sensor directly (gpiozero) and fetching cloud data.
+
+The AI: A cloud API (like Gemini or OpenAI) strictly prompted to output pure JSON data based on local weather.
+
+The Face (Frontend): Plain HTML/CSS/JS running in full-screen Chromium (Kiosk Mode), using vw/vh sizing and hardware-accelerated CSS animations for smooth performance.
+
+The UX: The screen sleeps when idle and instantly wakes via motion. It displays a visual, color-coded clothing checklist using cartoon icons for non-reading children.
+
+The Setup: Balena WiFi Connect provides a seamless, plug-and-play Captive Portal so users can connect it to their home Wi-Fi using their phone.

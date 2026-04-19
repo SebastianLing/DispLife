@@ -1,0 +1,334 @@
+/* --- RESET & FONTS --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { overflow: hidden; font-family: 'Nunito', sans-serif; }
+
+.dashboard-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* --- 1. SUNNY / CLEAR DAY (Default) --- */
+:root, [data-weather="sunny"] {
+    --sky-top: #2980B9;      /* Deep rich blue */
+    --sky-bottom: #6DD5FA;   /* Bright cyan near the horizon */
+    --ground-top: #56ab2f;   /* Bright lush grass */
+    --ground-bottom: #a8e063;
+}
+
+/* --- 2. PARTLY CLOUDY / OVERCAST --- */
+[data-weather="cloudy"] {
+    --sky-top: #2980B9;      /* Deep rich blue */
+    --sky-bottom: #6DD5FA;   /* Bright cyan near the horizon */
+    --ground-top: #73806D;   /* Muted, less vibrant grass */
+    --ground-bottom: #546351;
+}
+
+[data-weather="overcast"] {
+    --sky-top: #6d7377;      /* Deep rich blue */
+    --sky-bottom: #737374;   /* Bright cyan near the horizon */
+    --ground-top: #73806D;   /* Muted, less vibrant grass */
+    --ground-bottom: #546351;
+}
+
+/* --- 3. RAINY / DRIZZLE --- */
+[data-weather="rainy"] {
+    --sky-top: #4b6cb7;      /* Dark, wet blue */
+    --sky-bottom: #182848;   /* Deep slate */
+    --ground-top: #3a4a35;   /* Dark, wet muddy green */
+    --ground-bottom: #2c3828;
+}
+
+/* --- 4. THUNDERSTORM (Dramatic!) --- */
+[data-weather="stormy"] {
+    --sky-top: #232526;      /* Almost black */
+    --sky-bottom: #414345;   /* Heavy charcoal */
+    --ground-top: #1e2722;   /* Very dark shadow grass */
+    --ground-bottom: #141a17;
+}
+
+/* --- 5. SNOWY / ICY --- */
+[data-weather="snowy"] {
+    --sky-top: #E0EAFC;      /* Very pale icy blue */
+    --sky-bottom: #CFDEF3;   /* Soft winter grey */
+    --ground-top: #ffffff;   /* Pure white snow */
+    --ground-bottom: #e6e6e6; /* Slight shadow on the snow */
+}
+
+/* --- 1. BASE LAYER SETUP --- */
+.weather-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh; /* Cover the whole screen */
+    pointer-events: none; /* So it doesn't block you from clicking anything */
+    opacity: 0;           /* Hidden by default */
+    visibility: hidden;
+    transition: opacity 2s ease; /* Smooth fade-in! */
+    z-index: 5; /* Puts weather behind the UI box but in front of the sky */
+}
+
+/* --- 2. ACTIVATING THE LAYERS --- */
+[data-weather="cloudy"] .layer-sun,
+[data-weather="sunny"] .layer-sun {
+    opacity: 0.8;
+    visibility: visible;
+}
+
+/* If the weather is cloudy, rainy, or stormy, show the clouds! */
+[data-weather="cloudy"] .layer-clouds,
+[data-weather="overcast"] .layer-clouds,
+[data-weather="snowy"] .layer-clouds {
+    opacity: 0.8;
+    visibility: visible;
+}
+
+[data-weather="rainy"] .layer-darkClouds,
+[data-weather="stormy"] .layer-darkClouds{
+    opacity: 0.8;
+    visibility: visible;
+}
+
+/* Show rain ONLY when rainy or stormy */
+[data-weather="rainy"] .layer-rain,
+[data-weather="stormy"] .layer-rain {
+    opacity: 0.6;
+    visibility: visible;
+}
+
+/* Show snow ONLY when snowy */
+[data-weather="snowy"] .layer-snow {
+    opacity: 0.9;
+    visibility: visible;
+}
+
+/* --- 3. THE HARDWARE-FRIENDLY ANIMATIONS --- */
+
+.layer-sun {
+    background-image: url('icons/weather/sun.png');
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 1vh;
+    left: 2vw;
+    height: 35vh;
+    background-size: 20vw auto; /* Adjust based on your image size */
+    z-index: 0;
+}
+
+/* The Clouds Layer (Slow pan to the right) */
+.layer-clouds {
+    background-image: url('icons/weather/clouds.png');
+    height: 60vh;
+    background-size: 50vw auto; /* Adjust based on your image size */
+    animation: pan-clouds 60s linear infinite;
+    z-index: 1;
+}
+
+.layer-darkClouds {
+    background-image: url('icons/weather/dark-clouds.png');
+    height: 60vh;
+    background-size: 50vw auto; /* Adjust based on your image size */
+    animation: pan-clouds 60s linear infinite;
+    z-index: 1;
+}
+
+/* The Rain Layer (Fast fall downwards) */
+.layer-rain {
+    background-image: url('icons/weather/rain.png');
+    background-size: 20vw auto; 
+    animation: fall-down 4.6s linear infinite;
+}
+
+/* The Snow Layer (Slower fall downwards) */
+.layer-snow {
+    background-image: url('icons/weather/snow.png');
+    background-size: 30vw auto;
+    animation: fall-down 5s linear infinite;
+}
+
+/* The Animation Keyframes */
+@keyframes pan-clouds {
+    from { background-position: 0 0; }
+    to   { background-position: 100vw 0; }
+}
+
+@keyframes fall-down {
+    from { background-position: 0 -100vh; }
+    to   { background-position: 0 100vh; }
+}
+
+/* --- THE SCENERY STRUCTURAL RULES --- */
+.scenery-sky {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100vw; 
+    height: 60vh; /* If this is missing, the sky disappears! */
+    
+    /* The new variable colors */
+    background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+    transition: background 1.5s ease;
+}
+
+.cloud {
+    position: absolute;
+    height: auto;
+    /* Keeps the nice drop shadow behind your image files! */
+    filter: drop-shadow(0px 10px 5px rgba(0,0,0,0.3));
+}
+
+.cloud-1 { 
+    bottom: 25vh; 
+    right: 40vw; 
+    width: 20vw;
+}
+
+.scenery-ground {
+    position: absolute;
+    bottom: 0; 
+    left: 0;
+    width: 100vw; 
+    height: 40vh;
+    
+    /* The new variable colors */
+    background: linear-gradient(to bottom, var(--ground-top), var(--ground-bottom));
+    transition: background 1.5s ease;
+    border-top: 1vh solid rgba(0,0,0,0.1); /* Adds a nice subtle line between grass and sky */
+}
+
+/* --- THE POND --- */
+.pond {
+    position: absolute;
+    bottom: 5vh; 
+    right: 10vw;
+    width: 25vw; /* Controls how wide the pond is */
+    height: auto; /* Ensures the image doesn't stretch weirdly */
+    object-fit: contain;
+    opacity: 0.95; /* Optional: Makes it blend slightly with the grass */
+    z-index: 99;
+}
+
+/* --- THE TREES --- */
+.tree {
+    position: absolute;
+    height: auto;
+    /* Keeps the nice drop shadow behind your image files! */
+    filter: drop-shadow(0px 10px 5px rgba(0,0,0,0.3));
+    z-index: 15;
+}
+
+.tree-1 { 
+    bottom: 25vh; 
+    right: 30vw; 
+    width: 25vw; /* Size of the larger tree */
+
+}
+
+.tree-2 { 
+    bottom: 30vh; 
+    right: 10vw; 
+    width: 15vw; /* Size of the smaller tree */
+}
+
+/* --- 2. TOP RIGHT INFO BOX --- */
+.info-box {
+    position: absolute;
+    top: 4vh; right: 4vw;
+    background: rgba(255, 255, 255, 0.85); /* Semi-transparent white */
+    backdrop-filter: blur(10px);
+    padding: 2vh 3vw;
+    border-radius: 3vw;
+    box-shadow: 0px 10px 20px rgba(0,0,0,0.2);
+    display: flex;
+    gap: 3vw;
+    align-items: center;
+    color: #333;
+    border: 3px solid white;
+    z-index: 10;
+}
+
+.weather-section {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    border-right: 2px solid #ccc;
+    padding-right: 2vw;
+}
+
+.weather-icon { font-size: 8vh; color: #ff9900; }
+.temperature { font-size: 7vh; font-weight: 900; }
+
+.time-section { display: flex; flex-direction: column; }
+.time { font-size: 5vh; font-weight: 900; line-height: 1; }
+.date { font-size: 2.5vh; color: #666; font-weight: 700; }
+
+/* --- 3. LEFT SIDE MASCOT & CLOTHING ZONES --- */
+.mascot-container {
+    position: absolute;
+    bottom: 10vh;
+    left: 10vw;
+    width: 30vw;
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 10;
+}
+
+.mascot-base {
+    height: 100%; /* Tells the image to fill the height of its container */
+    width: auto;  /* Keeps the bear from stretching or squishing */
+    object-fit: contain;
+    /* This keeps the shadow perfectly wrapping around the shape of your drawing! */
+    filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.4)); 
+}
+
+/* Clothing Zone Target Areas */
+.clothing-zone {
+    position: absolute;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* Positioning each zone over the bear's anatomy */
+.zone-head { width: 19vh; height: 19vh; top: -12%; left: 50%; transform: translateX(-50%); }
+.zone-torso { width: 40vh; height: 21vh; top: 35%; left: 50%; transform: translateX(-50%); border-radius: 2vh;}
+.zone-hands { 
+    width: 50vh;
+    height: 8vh; 
+    bottom: 25%; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    border-radius: 4vh;
+    display: flexbox;
+    justify-content: space-between;
+    flex-direction: row;
+}
+.gloves { 
+    height: 15vh; 
+    transform: rotate(160deg);
+}
+#leftGlove{
+    transform: scaleY(-1);
+}
+.zone-legs { width: 37vh; height: 21vh; bottom: 0%; left: 50%; transform: translateX(-50%); border-radius: 2vh;}
+.zone-feet { 
+    width: 18vh;
+    height: 8vh; 
+    bottom: -10%; 
+    left: 45%; 
+    transform: translateX(-50%); 
+    border-radius: 4vh;
+    display: flexbox;
+    justify-content: space-between;
+    flex-direction: row;
+}
+.shoes { 
+    height: 15vh; 
+}
+
+/* --- ANIMATIONS --- */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+.animate-pulse { animation: pulse 3s ease-in-out infinite; }

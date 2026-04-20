@@ -1,16 +1,64 @@
 from flask import Flask, render_template, jsonify
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import requests
 import json
+
 import os
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
+from pydantic import BaseModel 
+import enum
+
+load_dotenv() 
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
+
+"""
+- "head": ["baseball-cap", "umbrella", "winter-hat", "none"]
+- "torso": ["tshirt", "jacket", "none"]
+- "hands": ["christmas-gloves", "none"]
+- "legs": ["jeans", "snow-pants", "none"]
+- "feet": ["sneakers", "boots", "snow-boots", "none"]
+"""
+
+class Head(str, enum.Enum):
+    CAP = "baseball-cap"
+    RAIN_HAT = "umbrella"
+    WINTER_HAT = "winter-hat"
+    NONE = "none"
+
+class Torso(str, enum.Enum):
+    TSHIRT = "tshirt"
+    JACKET = "jacket"
+    NONE = "none"
+
+class Hands(str, enum.Enum):
+    GLOVES = "christmas-gloves"
+    NONE = "none"
+
+class Legs(str, enum.Enum):
+    JEANS = "jeans"
+    SNOW_PANTS = "snow_pants"
+    NONE = "none"
+
+class Feet(str, enum.Enum):
+    SNEAKERS = "sneakers"
+    RAIN_BOOTS = "boots"
+    SNOW_BOOTS = "snow_boots"
+    NONE = "none"
+
+# 1. Define your desired JSON structure using Pydantic
+class JSON_schema(BaseModel):
+    head: Head
+    torso: Torso
+    hands: Hands
+    legs: Legs
+    feet: Feet
 
 app = Flask(__name__)
 
-# --- 1. AI KONFIGURATION ---
-load_dotenv() 
-GOOGLE_API_KEY = os.getenv("API_KEY")
-genai.configure(api_key=GOOGLE_API_KEY)
+# --- 1. AI KONFIGURATION ---  
+# The client gets the API key from the environment variable `GEMINI_API_KEY`.
+client = genai.Client(api_key=GOOGLE_API_KEY)
 
 system_instruction = """
 You are a children's stylist. Based on the provided weather conditions, decide what clothes a child (represented by a bear) should wear outside.
@@ -34,10 +82,11 @@ Example output:
 }
 """
 
-model = genai.GenerativeModel(
-    model_name="gemini-2.5-flash",
+# Define the configuration with your system prompt
+config = types.GenerateContentConfig(
     system_instruction=system_instruction,
-    generation_config={"response_mime_type": "application/json"} 
+    response_mime_type="application/json",
+    response_schema=JSON_schema,
 )
 
 def get_smhi_weather():
@@ -84,14 +133,20 @@ def get_clothes():
         prompt = f"It is currently {weather['temperature_celsius']}°C, wind speed is {weather['wind_ms']} m/s, and the general condition is {weather['condition']}."
         
         # C. Fråga Gemini enbart om kläderna
-        ai_response = model.generate_content(prompt)
-        clothes_data = json.loads(ai_response.text)
+        response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=config
+        )
+
+        clothes_data = json.loads(response.text)
+        print("response from Gemini: ", clothes_data)
         
         # D. Slå ihop SMHI-vädret med Geminis klädval!
         final_payload = {
             "condition": weather['condition'],
             "temperature": f"{int(weather['temperature_celsius'])}°C",
-            "clothes": clothes_data['clothes'] # Här ligger Geminis svar (head, torso, etc)
+            "clothes": clothes_data # Här ligger Geminis svar (head, torso, etc)
         }
         
         return jsonify(final_payload)
@@ -106,5 +161,4 @@ def get_clothes():
         }), 500
 
 if __name__ == '__main__':
-    # Tryggt och säkert stängt för omvärlden!
     app.run(port=5000, debug=True)

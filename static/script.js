@@ -26,18 +26,17 @@ function updateWeather(data) {
     weatherIcon.setAttribute('src', pathToWeatherIcons + data.condition + fileSuffix);
 }
 
-let currentBodyPart;
 function updateClothes(data){
     Object.keys(data.clothes).forEach(bodyPart => {
-        console.log(bodyPart)
         const item = data.clothes[bodyPart];
+        let currentBodyPart = document.getElementById(imageIdPrefix + bodyPart);
         if(item && item !== "none"){
             fullClothesPath = pathToClothes + bodyPart + '/' + item + fileSuffix;
         }
         else{
             fullClothesPath = '';
+            currentBodyPart.style.display = "none";
         }
-        currentBodyPart = document.getElementById(imageIdPrefix + bodyPart);
         if(currentBodyPart.children.length == 0){
             currentBodyPart.setAttribute('src', fullClothesPath);
         }
@@ -53,9 +52,9 @@ async function fetchData(){
     try {
         const response = await fetch('/api/get-clothes');
 
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
+        // if (!response.ok) {
+        //     throw new Error(`Server error: ${response.status}`);
+        // }
         
         const data = await response.json();
 

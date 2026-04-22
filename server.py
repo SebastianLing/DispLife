@@ -3,6 +3,7 @@ from google import genai
 from google.genai import types
 import requests
 import json
+import time
 
 import os
 from dotenv import load_dotenv
@@ -89,6 +90,10 @@ config = types.GenerateContentConfig(
     response_schema=JSON_schema,
 )
 
+# Här sparar vi datan i Pi:ns minne!
+cached_data = None
+last_update_time = 0
+
 def get_smhi_weather():
     # Koordinater för Linköping
     url = "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/15.6214/lat/58.4108/data.json"
@@ -125,6 +130,13 @@ def home():
 
 @app.route('/api/get-clothes')
 def get_clothes():
+    global cached_data, last_update_time
+    current_time = time.time()
+
+    if cached_data and (current_time - last_update_time < 900):
+        print("Använder sparad väderdata (Cache hit) - Sparar API-anrop!")
+        return jsonify(cached_data)
+    
     try:
         # A. Hämta riktig data från SMHI
         weather = get_smhi_weather()
@@ -148,7 +160,7 @@ def get_clothes():
             "temperature": f"{int(weather['temperature_celsius'])}°C",
             "clothes": clothes_data # Här ligger Geminis svar (head, torso, etc)
         }
-        
+        last_update_time = current_time
         return jsonify(final_payload)
 
     except Exception as e:

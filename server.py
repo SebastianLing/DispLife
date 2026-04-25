@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, redirect
 from google import genai
 from google.genai import types
 import requests
@@ -12,6 +12,7 @@ import enum
 
 load_dotenv() 
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
+GEOCODING_API_KEY = os.getenv("GEOCODING_API_KEY")
 
 """
 - "head": ["baseball-cap", "umbrella", "winter-hat", "none"]
@@ -94,9 +95,30 @@ config = types.GenerateContentConfig(
 cached_data = None
 last_update_time = 0
 
-def get_smhi_weather():
-    # Koordinater för Linköping
-    url = "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/15.6214/lat/58.4108/data.json"
+def parse_user_coordinates():
+    with open('settings.json', 'r', encoding='utf-8') as f:
+        contents = json.load(f)
+        post_code = contents['post_code']    
+    try:
+        url = f"https://api.geoapify.com/v1/geocode/search?text={post_code}&lang=en&limit=10&type=postcode&filter=countrycode:se&apiKey={GEOCODING_API_KEY}"
+
+        resp = requests.get(url)
+        data = resp.json()
+        properties = data['features'][0]['properties']
+        lon = str(round(float(properties['lon']), 4))
+        lat = str(round(float(properties['lat']), 4))
+        return lon, lat
+    except Exception as e:
+        if os.path.exists("settings.json"):
+            print("exception found: ", e)
+            os.remove("settings.json")
+        else:
+            print("The file does not exist") 
+    
+
+def get_smhi_weather(lon, lat):
+    url = f"https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/{lon}/lat/{lat}/data.json"
+    print(url)
     
     response = requests.get(url)
     data = response.json()
@@ -124,9 +146,36 @@ def get_smhi_weather():
         "condition": condition,
     }
 
+
 @app.route('/')
 def home():
+    # 1. TRAFIKPOLISEN: Har användaren redan gjort setupen?
+    # Vi kollar om filen 'settings.json' existerar på Raspberry Pi:n.
+    if not os.path.exists('settings.json'):
+        # Filen saknas! Detta är första uppstarten. Visa setup-sidan.
+        return render_template('setup.html')
+    
+    # 2. Om filen fanns, ladda den vanliga skärmen!
     return render_template('index.html')
+
+@app.route('/setup', methods=['POST'])
+def handle_setup():
+    # Denna rutt används nu BARA när kunden trycker på "Spara"-knappen
+    wifi_namn = request.form['ssid']
+    wifi_losen = request.form['password']
+    postal_code = request.form['postal_code']
+
+    data_obj = {
+        "ssid" : wifi_namn,
+        "password" : wifi_losen,
+        "post_code" : postal_code
+    }
+    # set up wifi with some bash script maybe? or modify config file?
+    
+    with open('settings.json', 'w', encoding='utf-8') as f:
+        json.dump(data_obj, f)
+    
+    return redirect('/')
 
 @app.route('/api/get-clothes')
 def get_clothes():
@@ -139,7 +188,8 @@ def get_clothes():
     
     try:
         # A. Hämta riktig data från SMHI
-        weather = get_smhi_weather()
+        lon, lat = parse_user_coordinates()
+        weather = get_smhi_weather(lon, lat)
         
         # B. Bygg prompten till Gemini
         prompt = f"It is currently {weather['temperature_celsius']}°C, wind speed is {weather['wind_ms']} m/s, and the general condition is {weather['condition']}."
@@ -167,10 +217,10 @@ def get_clothes():
         print(f"Ett fel uppstod: {e}")
         # Reservdata om internet dör
         return jsonify({
-            "condition": "cloudy", 
-            "temperature": "ERROR",
-            "clothes": {"head": "none", "torso": "jacket", "hands": "none", "legs": "jeans", "feet": "sneakers"}
+            "condition": "rainy", 
+            "temperature": "?",
+            "clothes": {"head": "none", "torso": "jacket", "hands": "none", "legs": "jeans", "feet": "boots"}
         }), 500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=5000, debug=False)

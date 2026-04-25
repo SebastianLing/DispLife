@@ -50,12 +50,7 @@ function updateClothes(data){
 
 async function fetchData(){
     try {
-        const response = await fetch('/api/get-clothes');
-
-        // if (!response.ok) {
-        //     throw new Error(`Server error: ${response.status}`);
-        // }
-        
+        const response = await fetch('/api/get-clothes');        
         const data = await response.json();
 
         updateWeather(data);

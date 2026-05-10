@@ -56,7 +56,8 @@ class JSON_schema(BaseModel):
     legs: Legs
     feet: Feet
 
-app = Flask(__name__)
+
+app = Flask(__name__) # init flask server
 
 # --- 1. AI KONFIGURATION ---  
 # The client gets the API key from the environment variable `GEMINI_API_KEY`.
@@ -96,29 +97,30 @@ cached_data = None
 last_update_time = 0
 
 def parse_user_coordinates():
-    with open('settings.json', 'r', encoding='utf-8') as f:
-        contents = json.load(f)
-        post_code = contents['post_code']    
+   url = "http://ip-api.com/json/?fields=status,message,city,lat,lon"
+    
     try:
-        url = f"https://api.geoapify.com/v1/geocode/search?text={post_code}&lang=en&limit=10&type=postcode&filter=countrycode:se&apiKey={GEOCODING_API_KEY}"
+        # 5-second timeout ensures the kiosk doesn't hang if the API is slow
+        response = requests.get(url, timeout=5)
+        data = response.json()
 
-        resp = requests.get(url)
-        data = resp.json()
-        properties = data['features'][0]['properties']
-        lon = str(round(float(properties['lon']), 4))
-        lat = str(round(float(properties['lat']), 4))
-        return lon, lat
-    except Exception as e:
-        if os.path.exists("settings.json"):
-            print("exception found: ", e)
-            os.remove("settings.json")
+        if data.get("status") == "success":
+            return {
+                "city": data.get("city"),
+                "lat": data.get("lat"),
+                "lon": data.get("lon")
+            }
         else:
-            print("The file does not exist") 
+            print(f"API Error: {data.get('message')}")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Connection Error: {e}")
+        return None 
     
 
 def get_smhi_weather(lon, lat):
     url = f"https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/{lon}/lat/{lat}/data.json"
-    print(url)
     
     response = requests.get(url)
     data = response.json()
@@ -149,33 +151,8 @@ def get_smhi_weather(lon, lat):
 
 @app.route('/')
 def home():
-    # 1. TRAFIKPOLISEN: Har användaren redan gjort setupen?
-    # Vi kollar om filen 'settings.json' existerar på Raspberry Pi:n.
-    if not os.path.exists('settings.json'):
-        # Filen saknas! Detta är första uppstarten. Visa setup-sidan.
-        return render_template('setup.html')
-    
-    # 2. Om filen fanns, ladda den vanliga skärmen!
     return render_template('index.html')
 
-@app.route('/setup', methods=['POST'])
-def handle_setup():
-    # Denna rutt används nu BARA när kunden trycker på "Spara"-knappen
-    wifi_namn = request.form['ssid']
-    wifi_losen = request.form['password']
-    postal_code = request.form['postal_code']
-
-    data_obj = {
-        "ssid" : wifi_namn,
-        "password" : wifi_losen,
-        "post_code" : postal_code
-    }
-    # set up wifi with some bash script maybe? or modify config file?
-    
-    with open('settings.json', 'w', encoding='utf-8') as f:
-        json.dump(data_obj, f)
-    
-    return redirect('/')
 
 @app.route('/api/get-clothes')
 def get_clothes():
@@ -183,12 +160,11 @@ def get_clothes():
     current_time = time.time()
 
     if cached_data and (current_time - last_update_time < 900):
-        print("Använder sparad väderdata (Cache hit) - Sparar API-anrop!")
         return jsonify(cached_data)
     
     try:
         # A. Hämta riktig data från SMHI
-        lon, lat = parse_user_coordinates()
+        city, lon, lat = parse_user_coordinates()
         weather = get_smhi_weather(lon, lat)
         
         # B. Bygg prompten till Gemini
@@ -208,7 +184,8 @@ def get_clothes():
         final_payload = {
             "condition": weather['condition'],
             "temperature": f"{int(weather['temperature_celsius'])}°C",
-            "clothes": clothes_data # Här ligger Geminis svar (head, torso, etc)
+            "clothes": clothes_data,
+	    "city": city
         }
         last_update_time = current_time
         return jsonify(final_payload)
@@ -219,8 +196,6 @@ def get_clothes():
         return jsonify({
             "condition": "rainy", 
             "temperature": "?",
-            "clothes": {"head": "none", "torso": "jacket", "hands": "none", "legs": "jeans", "feet": "boots"}
+            "clothes": {"head": "none", "torso": "jacket", "hands": "none", "legs": "jeans", "feet": "boots"},
+	    "city": "Error"
         }), 500
-
-if __name__ == '__main__':
-    app.run(port=5000, debug=False)

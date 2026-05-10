@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ställ in din Väderbjörn</title>
+    <title>Setting up</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body {
@@ -15,85 +15,24 @@
             height: 100vh;
             margin: 0;
         }
-        .setup-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
+        .title{
+            font-size: 3vw;
+            font-weight: 700;
+            margin-bottom: 10px;
+            border-bottom: 1px solid lightgray;
         }
-        h1 { color: #333; font-size: 24px; margin-bottom: 5px; }
-        p { color: #666; font-size: 14px; margin-bottom: 25px; }
-        .form-group {
-            margin-bottom: 15px;
-            text-align: left;
+        .text2{
+            font-size: 3vw;
         }
-        label { 
-            display: block; 
-            font-size: 14px; 
-            color: #333; 
-            margin-bottom: 5px; 
-            font-weight: 700; 
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box; /* Ser till att padding inte spränger bredden */
-            transition: border-color 0.3s;
-            font-family: 'Nunito', sans-serif;
-        }
-        input:focus {
-            border-color: #56ab2f;
-            outline: none;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: #56ab2f;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 900;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.3s, transform 0.1s;
-        }
-        button:hover { background-color: #438a22; }
-        button:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
-
-    <div class="setup-card">
-        <h1>🐻 Välkommen!</h1>
-        <p>Låt oss koppla upp din väderskärm mot nätet och ställa in din stad.</p>
-        
-        <form action="/setup" method="POST">
-            
-            <div class="form-group">
-                <label for="ssid">Wi-Fi SSID (name):</label>
-                <input type="text" id="ssid" name="ssid" placeholder="Network_SSID" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Wi-Fi Password:</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required>
-            </div>
-
-            <div class="form-group">
-                <label for="postal_code">postal code:</label>
-                <input type="text" id="city" name="postal_code" placeholder="111 20 (stockholm, sweden)" required>
-            </div>
-            
-            <button type="submit">Save</button>
-        </form>
+    <div class="main">
+            <div class="title">Welcome!<br>Your WeatherBear is setting up</div>
+            <div>To connect your WeatherBear to the internet,<br>connect your phone/tablet/computer to the WiFi named <b>WeatherBear_WiFi</b>,<br> and follow the instructions.</div>
+            <br>
+            <div class="text">Scan the QR-code down below if you want to know more about your WeatherBear!</div>
+            <img src="../static/icons/qr_code.png" alt="qr code">
     </div>
-
 </body>
 </html>

@@ -97,7 +97,7 @@ cached_data = None
 last_update_time = 0
 
 def parse_user_coordinates():
-   url = "http://ip-api.com/json/?fields=status,message,city,lat,lon"
+    url = "http://ip-api.com/json/?fields=status,message,city,lat,lon"
     
     try:
         # 5-second timeout ensures the kiosk doesn't hang if the API is slow
@@ -185,7 +185,7 @@ def get_clothes():
             "condition": weather['condition'],
             "temperature": f"{int(weather['temperature_celsius'])}°C",
             "clothes": clothes_data,
-	    "city": city
+	        "city": city
         }
         last_update_time = current_time
         return jsonify(final_payload)
@@ -197,5 +197,5 @@ def get_clothes():
             "condition": "rainy", 
             "temperature": "?",
             "clothes": {"head": "none", "torso": "jacket", "hands": "none", "legs": "jeans", "feet": "boots"},
-	    "city": "Error"
+	        "city": "Error"
         }), 500

@@ -55,6 +55,7 @@ async function fetchData(){
 
         updateWeather(data);
         updateClothes(data);
+        
 
     }catch (error) {
         console.error("Failed to fetch data from Flask:", error);
